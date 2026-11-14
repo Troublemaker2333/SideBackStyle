@@ -24,7 +24,7 @@ VERSION_CODE = "1"
 VERSION_NAME = "1.0"
 MIN_SDK = "29"
 TARGET_SDK = "35"
-XPOSED_ENTRY = "com.junjun.sideback.BackFxHook"
+XPOSED_ENTRY = "com.junjun.sideback.SideBackEntry"
 
 WORK = Path(tempfile.gettempdir()) / "sideback-build"
 STAGE = WORK / "src"
