@@ -2,7 +2,7 @@
 
 给 ColorOS 侧滑返回手势换一套「图标 + 背景」的 LSPosed 模块。
 
-这是从 [君君工具箱](https://github.com/) 里独立出来的单功能版本：只保留侧滑返回美化，代码、配置、构建完全独立，和工具箱互不影响。
+这是从「君君工具箱」里独立出来的单功能版本：只保留侧滑返回美化，代码、配置、构建完全独立，和工具箱互不影响。
 
 > 适用：ColorOS 16 / 17（Android 16 / 17），SystemUI 使用 `com.oplus.systemui.navigationbar.gesture.sidegesture.SideGestureDetector` 的机型。
 > 已在 OPPO Find X8 Ultra（PKU110，ColorOS 17 / Android 17）实机验证。
@@ -45,6 +45,8 @@
 ## 安装
 
 1. 安装 APK：`adb install -r SideBackStyle-1.0.apk`
+   如果系统安装器拦截 adb 安装（部分 ColorOS），改用 root 安装：
+   `adb shell su -c 'pm install -r /data/local/tmp/SideBackStyle-1.0.apk'`
 2. 在 LSPosed 中启用「侧滑返回样式」，作用域勾选 **系统界面**（`com.android.systemui`）
 3. 授予写系统设置权限（否则设置无法下发）：
 
