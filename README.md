@@ -9,8 +9,8 @@
 
 ## 下载
 
-- [Releases](https://github.com/Troublemaker2333/SideBackStyle/releases/latest)：`SideBackStyle-1.0.apk`
-- 也可以直接下载仓库里的 [dist/SideBackStyle-1.0.apk](dist/SideBackStyle-1.0.apk)
+- [Releases](https://github.com/Troublemaker2333/SideBackStyle/releases/latest)：`SideBackStyle-1.2.apk`
+- 也可以直接下载仓库里的 [dist/SideBackStyle-1.2.apk](dist/SideBackStyle-1.2.apk)
 
 ---
 
@@ -35,39 +35,29 @@
 - **液态玻璃**：半透明着色 + 磨砂噪点 + 顶部高光 + 底部折射 + 双层高光描边 + 柔和投影，磨砂强度 0–100%
 - **过程动效**（滑动过程中可见，不是待机循环）：拖尾、粒子、残影、弹性、波纹
 - **实时预览**：设置页直接预览，可固定预览卡片不随列表滚动
-- **配置通道**：`Settings.Global` 的 `junjun_sideback`，SystemUI 内 700ms 缓存读取，改完下一次手势即生效，无需重启
+- **配置通道**：模块自己的 SharedPreferences + 只读 ContentProvider（`com.junjun.sideback.config`），SystemUI 内 700ms 缓存，改完下一次手势即生效
 
 ## 兼容性
 
 | 项目 | 说明 |
 | --- | --- |
 | 系统 | ColorOS 16 / 17（Android 16 / 17） |
-| 框架 | LSPosed（需启用模块并勾选作用域「系统界面」） |
-| 权限 | `WRITE_SECURE_SETTINGS`（用 adb 授权一次） |
-| 已验证机型 | OPPO Find X8 Ultra（PKU110），ColorOS 17 |
+| 框架 | LSPosed 2.x（libxposed API 100+，需启用模块并勾选作用域「系统界面」） |
+| 权限 | 不需要任何权限（不需要 adb grant，也不需要 root 授权） |
+| 已验证机型 | OPPO Find X8 Ultra（PKU110），ColorOS 17（LSPosed 2.2.1 / API 102） |
 | 其他 ROM | 类路径不同则不生效，可自行修改 `BackFxHook` 里的类名适配 |
 
 ## 安装
 
-1. 安装 APK：`adb install -r SideBackStyle-1.0.apk`
+1. 安装 APK：`adb install -r SideBackStyle-1.2.apk`
    如果系统安装器拦截 adb 安装（部分 ColorOS），改用 root 安装：
-   `adb shell su -c 'pm install -r /data/local/tmp/SideBackStyle-1.0.apk'`
+   `adb shell su -c 'pm install -r /data/local/tmp/SideBackStyle-1.2.apk'`
 2. 在 LSPosed 中启用「侧滑返回样式」，作用域勾选 **系统界面**（`com.android.systemui`）
-3. 授予写系统设置权限（否则设置无法下发）：
+3. 重启一次手机，让 LSPosed 重新扫描并加载模块（新装模块必须重启一次，之后升级/改设置都不需要）
 
-   ```bash
-   adb shell pm grant com.junjun.sideback android.permission.WRITE_SECURE_SETTINGS
-   ```
+4. 打开「侧滑返回样式」开始配置
 
-4. 重启 SystemUI 让模块加载：
-
-   ```bash
-   adb shell su -c 'killall com.android.systemui'
-   ```
-
-   （没有 root 的话重启手机也可以）
-
-5. 打开「侧滑返回样式」开始配置
+**不需要授予任何权限**：配置写在模块自己的 SharedPreferences 里，SystemUI 通过只读 `ContentProvider` 读取。装好、在 LSPosed 启用、重启一次手机即可。
 
 ## 使用说明
 
@@ -100,7 +90,9 @@ SideBackStyle/
 │   ├── assets/xposed_init              # LSPosed 入口
 │   ├── java/com/junjun/sideback/
 │   │   ├── BackFxActivity.java         # 设置页（唯一 Activity）
-│   │   ├── BackFxConfig.java           # 配置模型 + Settings.Global 读写
+│   │   ├── BackFxConfig.java           # 配置模型 + SharedPreferences 读写
+│   │   ├── ConfigProvider.java         # 只读配置 Provider
+│   │   ├── SideBackModule.java         # libxposed 新版入口
 │   │   ├── BackFxHook.java             # 侧滑手势 hook
 │   │   ├── BackFxOverlay.java          # 悬浮窗与帧循环
 │   │   ├── BackFxRenderer.java         # 水滴背景 + 图标绘制
@@ -110,7 +102,7 @@ SideBackStyle/
 │   │   ├── PageAnim.java
 │   │   └── PredictiveBack.java
 │   └── res/
-├── vendor/api-82.jar                   # LSPosed API 93 存根
+├── vendor/libxposed-api.jar            # libxposed API 102
 ├── build.py
 ├── gen_icon.py
 └── dist/SideBackStyle-1.0.apk
@@ -119,7 +111,7 @@ SideBackStyle/
 ## 独立版本
 
 - 本仓库是完整的独立应用，不依赖任何其他模块或应用
-- 配置写在 `junjun_sideback`，与其他侧滑返回类模块按各自的键隔离；如果同时启用了功能重复的模块，请只保留一个，避免画出两层指示器
+- 如果同时启用了功能重复的模块，请只保留一个，避免画出两层指示器
 
 ## 已知限制
 

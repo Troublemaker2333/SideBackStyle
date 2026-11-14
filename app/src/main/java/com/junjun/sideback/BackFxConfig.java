@@ -20,7 +20,10 @@ import org.json.JSONObject;
 public final class BackFxConfig {
     private static final String TAG = "SideBackFx";
 
+    public static final String PACKAGE = "com.junjun.sideback";
     public static final String PREFS = "backfx";
+    public static final String PREF_KEY = "config";
+    /** 仅用于从旧版本迁移，新版本不再写入。 */
     public static final String SETTINGS_KEY = "junjun_sideback";
 
     public static final String ICON_ARROW = "arrow";
@@ -231,7 +234,7 @@ public final class BackFxConfig {
      */
     public static BackFxConfig load(Context ctx) {
         try {
-            String raw = Settings.Global.getString(ctx.getContentResolver(), SETTINGS_KEY);
+            String raw = readStored(ctx);
             if (raw != null && !raw.isEmpty()) {
                 return fromJson(raw);
             }
@@ -241,19 +244,87 @@ public final class BackFxConfig {
         return new BackFxConfig();
     }
 
+    /**
+     * 配置读取：
+     * <ul>
+     *   <li>SystemUI 进程（被注入）：XSharedPreferences 直接读模块的 prefs 文件</li>
+     *   <li>App 进程：自己的 SharedPreferences；旧版本 Settings.Global 自动迁移一次</li>
+     * </ul>
+     * 两条路都不需要 WRITE_SECURE_SETTINGS。
+     */
+    static String readStored(Context ctx) {
+        if (ctx == null) {
+            return null;
+        }
+        if (PACKAGE.equals(ctx.getPackageName())) {
+            try {
+                String raw = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                        .getString(PREF_KEY, null);
+                if (raw != null && !raw.isEmpty()) {
+                    return raw;
+                }
+            } catch (Throwable t) {
+                Log.e(TAG, "prefs read failed", t);
+            }
+            try {
+                String legacy = Settings.Global.getString(ctx.getContentResolver(), SETTINGS_KEY);
+                if (legacy != null && !legacy.isEmpty()) {
+                    ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                            .putString(PREF_KEY, legacy).apply();
+                    return legacy;
+                }
+            } catch (Throwable ignored) {
+            }
+            return null;
+        }
+        // SystemUI 进程：通过只读 ContentProvider 拿配置，App 不需要任何权限。
+        try {
+            android.os.Bundle result = ctx.getContentResolver().call(
+                    android.net.Uri.parse("content://" + ConfigProvider.AUTHORITY),
+                    ConfigProvider.METHOD_GET, null, null);
+            if (result != null) {
+                String raw = result.getString(ConfigProvider.KEY_JSON);
+                if (raw != null && !raw.isEmpty()) {
+                    return raw;
+                }
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "provider read failed", t);
+        }
+        // 旧版本兜底
+        try {
+            String legacy = Settings.Global.getString(ctx.getContentResolver(), SETTINGS_KEY);
+            if (legacy != null && !legacy.isEmpty()) {
+                return legacy;
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
     public boolean save(Context ctx) {
         return publish(ctx);
     }
 
-    /** 写入 Settings.Global，SystemUI 侧 700ms 内生效。 */
+    /** 写入模块自己的 SharedPreferences，SystemUI 侧 700ms 内生效；不需要任何权限。 */
     public static boolean publish(Context ctx, BackFxConfig c) {
+        String json = c.toJson();
+        boolean ok = false;
         try {
-            Settings.Global.putString(ctx.getContentResolver(), SETTINGS_KEY, c.toJson());
-            return true;
+            ok = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                    .putString(PREF_KEY, json).commit();
         } catch (Throwable t) {
-            Log.e(TAG, "publish failed", t);
-            return false;
+            Log.e(TAG, "publish prefs failed", t);
         }
+        // 已授权 WRITE_SECURE_SETTINGS 的旧安装仍写一份，方便回退；没权限就跳过。
+        try {
+            if (ctx.checkSelfPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS)
+                    == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                Settings.Global.putString(ctx.getContentResolver(), SETTINGS_KEY, json);
+            }
+        } catch (Throwable ignored) {
+        }
+        return ok;
     }
 
     public boolean publish(Context ctx) {
@@ -272,7 +343,7 @@ public final class BackFxConfig {
             return c;
         }
         try {
-            String raw = Settings.Global.getString(ctx.getContentResolver(), SETTINGS_KEY);
+            String raw = readStored(ctx);
             if (raw != null && !raw.isEmpty()) {
                 cache = fromJson(raw);
                 cacheAt = now;

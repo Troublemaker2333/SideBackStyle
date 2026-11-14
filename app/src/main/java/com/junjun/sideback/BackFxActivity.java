@@ -1017,7 +1017,7 @@ public class BackFxActivity extends Activity {
         steps.setText("1. 在 LSPosed 中启用本模块，作用域勾选「系统界面」(com.android.systemui)\n"
                 + "2. 打开本应用，调整图标、背景与动效，改动即时生效\n"
                 + "3. 从屏幕左/右边缘向内滑动即可看到效果\n"
-                + "4. 自定义图片会压缩到 128px 存入系统设置（约 30KB）\n"
+                + "4. 自定义图片会压缩到 128px 存入模块本地配置（约 30KB）\n"
                 + "5. 关闭「启用自定义样式」即恢复系统原样");
         steps.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         steps.setTextColor(getColor(R.color.text_secondary));
@@ -1052,7 +1052,7 @@ public class BackFxActivity extends Activity {
         card.addView(reset);
 
         TextView version = new TextView(this);
-        version.setText("侧滑返回样式 v1.0 · LSPosed 模块");
+        version.setText("侧滑返回样式 v1.2 · LSPosed 模块");
         version.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
         version.setTextColor(getColor(R.color.text_secondary));
         version.setPadding(0, dp(10), 0, 0);
@@ -1341,7 +1341,7 @@ public class BackFxActivity extends Activity {
         if (!ok && !permissionWarned) {
             permissionWarned = true;
             Toast.makeText(this,
-                    "缺少 WRITE_SECURE_SETTINGS，样式无法下发到系统界面",
+                    "样式保存失败，请检查应用存储权限",
                     Toast.LENGTH_LONG).show();
         }
         if (preview != null) {

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Build the FcWatch LSPosed module APK without Gradle.
 
 aapt2 compile -> aapt2 link -> javac -> d8 -> repack -> zipalign -> apksigner
@@ -20,11 +20,19 @@ BT = SDK / "build-tools" / "35.0.0"
 ANDROID = SDK / "platforms" / "android-35" / "android.jar"
 
 APP_ID = "com.junjun.sideback"
-VERSION_CODE = "1"
-VERSION_NAME = "1.0"
+VERSION_CODE = "3"
+VERSION_NAME = "1.2"
 MIN_SDK = "29"
 TARGET_SDK = "35"
-XPOSED_ENTRY = "com.junjun.sideback.SideBackEntry"
+XPOSED_ENTRY = "com.junjun.sideback.SideBackModule"
+MODULE_PROP = ("minApiVersion=100\n"
+               "targetApiVersion=102\n"
+               "staticScope=true\n"
+               "name=SideBackStyle\n"
+               "version=1.2\n"
+               "versionCode=3\n"
+               "author=Jun\n"
+               "description=ColorOS 侧滑返回自定义图标与背景\n")
 
 WORK = Path(tempfile.gettempdir()) / "sideback-build"
 STAGE = WORK / "src"
@@ -97,7 +105,7 @@ def main() -> None:
     if not JAVAC.exists():
         raise FileNotFoundError(f"missing javac: {JAVAC}")
 
-    xp_jar = WORK / "api-82.jar"
+    xp_jar = WORK / "libxposed-api.jar"
     if OUT.exists():
         shutil.rmtree(OUT)
     OUT.mkdir(parents=True)
@@ -105,7 +113,7 @@ def main() -> None:
     if STAGE.exists():
         shutil.rmtree(STAGE, ignore_errors=True)
     shutil.copytree(MAIN, STAGE)
-    shutil.copyfile(VENDOR / "api-82.jar", xp_jar)
+    shutil.copyfile(VENDOR / "libxposed-api.jar", xp_jar)
 
     aapt2 = BT / "aapt2.exe"
     zipalign = BT / "zipalign.exe"
@@ -157,6 +165,9 @@ def main() -> None:
                 continue
             add(z, info.filename, base.read(info), info.compress_type)
         add(z, "classes.dex", (OUT / "dex" / "classes.dex").read_bytes(), zipfile.ZIP_DEFLATED)
+        add(z, "META-INF/xposed/java_init.list", (XPOSED_ENTRY + "\n").encode(), zipfile.ZIP_DEFLATED)
+        add(z, "META-INF/xposed/module.prop", MODULE_PROP.encode(), zipfile.ZIP_DEFLATED)
+        add(z, "META-INF/xposed/scope.list", b"com.android.systemui\n", zipfile.ZIP_DEFLATED)
 
     run(zipalign, "-f", "-p", "4", OUT / "unsigned.apk", OUT / "aligned.apk")
 
@@ -190,12 +201,13 @@ def main() -> None:
 
     with zipfile.ZipFile(apk) as z:
         names = set(z.namelist())
-        for required in ("AndroidManifest.xml", "classes.dex", "resources.arsc", "assets/xposed_init"):
+        for required in ("AndroidManifest.xml", "classes.dex", "resources.arsc",
+                         "META-INF/xposed/java_init.list", "META-INF/xposed/module.prop"):
             if required not in names:
                 raise ValueError(f"APK missing {required}")
-        entry = z.read("assets/xposed_init").decode("utf-8").strip()
+        entry = z.read("META-INF/xposed/java_init.list").decode("utf-8").strip()
         if entry != XPOSED_ENTRY:
-            raise ValueError(f"bad xposed_init: {entry}")
+            raise ValueError(f"bad java_init.list: {entry}")
 
     print("\nbuild ok")
     print(f"  APK   : {apk}")
@@ -209,4 +221,5 @@ if __name__ == "__main__":
     except subprocess.CalledProcessError as exc:
         print(f"\nbuild failed: exit {exc.returncode}", file=sys.stderr)
         raise SystemExit(1)
+
 
