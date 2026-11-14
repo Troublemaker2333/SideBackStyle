@@ -5,7 +5,12 @@
 一个独立的 LSPosed 模块：只做 ColorOS 侧滑返回的图标与背景美化，代码、配置、构建都自包含，不依赖其他应用。
 
 > 适用：ColorOS 16 / 17（Android 16 / 17），SystemUI 使用 `com.oplus.systemui.navigationbar.gesture.sidegesture.SideGestureDetector` 的机型。
-> 已在 OPPO Find X8 Ultra（PKU110，ColorOS 17 / Android 17）实机验证。
+> 已在 OPPO Find X8 Ultra（PKU110，ColorOS 17 / Android 17）实机验证：LSPosed 2.2.1 启用后侧滑手势正常绘制玻璃水滴与图标。
+
+## 下载
+
+- [Releases](https://github.com/Troublemaker2333/SideBackStyle/releases/latest)：`SideBackStyle-1.0.apk`
+- 也可以直接下载仓库里的 [dist/SideBackStyle-1.0.apk](dist/SideBackStyle-1.0.apk)
 
 ---
 
