@@ -2,7 +2,7 @@
 
 给 ColorOS 侧滑返回手势换一套「图标 + 背景」的 LSPosed 模块。
 
-这是从「君君工具箱」里独立出来的单功能版本：只保留侧滑返回美化，代码、配置、构建完全独立，和工具箱互不影响。
+一个独立的 LSPosed 模块：只做 ColorOS 侧滑返回的图标与背景美化，代码、配置、构建都自包含，不依赖其他应用。
 
 > 适用：ColorOS 16 / 17（Android 16 / 17），SystemUI 使用 `com.oplus.systemui.navigationbar.gesture.sidegesture.SideGestureDetector` 的机型。
 > 已在 OPPO Find X8 Ultra（PKU110，ColorOS 17 / Android 17）实机验证。
@@ -111,11 +111,10 @@ SideBackStyle/
 └── dist/SideBackStyle-1.0.apk
 ```
 
-## 与君君工具箱的关系
+## 独立版本
 
-- 本仓库是**独立复制**，君君工具箱里的原功能不会被删除
-- 两者使用不同的配置键：工具箱 `junjun_backfx`，本模块 `junjun_sideback`
-- 两个模块都 hook 同一个 SystemUI 方法，**不要同时启用**，否则会画两层指示器
+- 本仓库是完整的独立应用，不依赖任何其他模块或工具箱
+- 配置写在 `junjun_sideback`，与其他侧滑返回类模块按各自的键隔离；如果同时启用了功能重复的模块，请只保留一个，避免画出两层指示器
 
 ## 已知限制
 
