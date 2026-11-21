@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -29,19 +31,33 @@ android {
     }
 
     /**
-     * The release keystore lives in `keystore/release.jks` and is not committed — CI supplies the same values through
-     * `SIDEBACK_STORE_PASSWORD` / `SIDEBACK_KEY_PASSWORD`. Signing with one fixed key is what lets an installed 2.0
-     * upgrade to a later 2.x in place; debug keys change per machine, so a debug-signed release would force everyone to
-     * uninstall first.
+     * The release keystore lives in `keystore/release.jks` and is not committed. Its password is never written in a
+     * tracked file: it comes from `keystore/keystore.properties` locally (ignored) or from `SIDEBACK_STORE_PASSWORD` /
+     * `SIDEBACK_KEY_PASSWORD` in CI. A password in the repository would let anyone sign an update that installs over a
+     * genuine one.
+     *
+     * Signing with one fixed key is what lets an installed 2.0 upgrade to a later 2.x in place; debug keys change per
+     * machine, so a debug-signed release would force everyone to uninstall first.
      */
     signingConfigs {
         create("release") {
             val store = rootProject.file("keystore/release.jks")
-            if (store.isFile) {
+            val props = rootProject.file("keystore/keystore.properties")
+            val local = if (props.isFile) {
+                Properties().apply { props.inputStream().use { load(it) } }
+            } else {
+                null
+            }
+            val storePasswordValue =
+                System.getenv("SIDEBACK_STORE_PASSWORD") ?: local?.getProperty("storePassword")
+            val keyPasswordValue =
+                System.getenv("SIDEBACK_KEY_PASSWORD") ?: local?.getProperty("keyPassword")
+
+            if (store.isFile && storePasswordValue != null && keyPasswordValue != null) {
                 storeFile = store
-                storePassword = System.getenv("SIDEBACK_STORE_PASSWORD") ?: "sideback2026"
-                keyAlias = "sideback"
-                keyPassword = System.getenv("SIDEBACK_KEY_PASSWORD") ?: "sideback2026"
+                storePassword = storePasswordValue
+                keyAlias = local?.getProperty("keyAlias") ?: "sideback"
+                keyPassword = keyPasswordValue
             }
         }
     }
