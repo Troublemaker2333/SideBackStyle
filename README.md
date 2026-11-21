@@ -70,16 +70,22 @@
 
 ## 构建
 
-不依赖 Gradle，直接用 Android SDK 的 `aapt2 / d8 / zipalign / apksigner`：
+Gradle。需要 JDK 17、Android SDK（platforms/android-37、build-tools 36.0.0）。
 
 ```bash
-# 需要：JDK 17、Android SDK（build-tools 35.0.0、platforms/android-35）
-export ANDROID_SDK_ROOT=/path/to/android-sdk
-python build.py
-# 产物：dist/SideBackStyle-1.0.apk
+# 产物：app/build/outputs/apk/debug/app-debug.apk
+./gradlew assembleDebug
 ```
 
-`build.py` 会自动复制源码到临时目录、编译资源与 Java、打包 dex、对齐并签名（默认用 `~/.android/debug.keystore`）。
+没有 wrapper 时用系统 Gradle：
+
+```bash
+gradle assembleDebug
+```
+
+compileSdk 必须是 37：设置页用的 COUI 2.0.0 在 AAR 元数据里声明了这个下限，
+小于它会在 `checkDebugAarMetadata` 直接报错。AGP 用 8.10.1、Kotlin 用 2.4.21，
+前者是支持 SDK 37 的版本，后者是 COUI 的 Kotlin 元数据版本。
 
 ## 目录结构
 
@@ -89,23 +95,23 @@ SideBackStyle/
 │   ├── AndroidManifest.xml
 │   ├── assets/xposed_init              # LSPosed 入口
 │   ├── java/com/junjun/sideback/
-│   │   ├── BackFxActivity.java         # 设置页（唯一 Activity）
-│   │   ├── BackFxConfig.java           # 配置模型 + SharedPreferences 读写
-│   │   ├── ConfigProvider.java         # 只读配置 Provider
-│   │   ├── SideBackModule.java         # libxposed 新版入口
+│   │   ├── BackFxPage.kt               # 设置页（Compose）
+│   │   ├── BackFxPageActivity.kt       # 设置页宿主 Activity
+│   │   ├── BackFxConfig.java           # 配置模型 + 读写
+│   │   ├── ConfigProvider.java         # 给 SystemUI 的只读通道
+│   │   ├── SideBackModule.java         # libxposed 入口
 │   │   ├── BackFxHook.java             # 侧滑手势 hook
 │   │   ├── BackFxOverlay.java          # 悬浮窗与帧循环
 │   │   ├── BackFxRenderer.java         # 水滴背景 + 图标绘制
-│   │   ├── BackFxMotion.java           # 拖尾/粒子/残影/波纹
-│   │   ├── ColorPickerDialog.java      # HSV 拾色器
-│   │   ├── MiuixSwitch.java            # COUI 风格开关
+│   │   ├── BackFxMotion.java           # 拖尾/粒子/残影/涟漪
+│   │   ├── BackFxPreview.java          # 设置页里的实时预览
+│   │   ├── ColorPickerDialog.java      # HSV 取色器
 │   │   ├── PageAnim.java
 │   │   └── PredictiveBack.java
 │   └── res/
 ├── vendor/libxposed-api.jar            # libxposed API 102
-├── build.py
-├── gen_icon.py
-└── dist/SideBackStyle-1.0.apk
+├── build.gradle.kts
+└── settings.gradle.kts
 ```
 
 ## 独立版本
