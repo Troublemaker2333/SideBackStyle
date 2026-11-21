@@ -10,3 +10,6 @@ local.properties
 
 # Legacy hand-written build (retired in favour of Gradle)
 /tmp/
+
+# Legacy 1.x APKs, retired in 2.0; releases go to GitHub Releases
+/dist/
