@@ -1,9 +1,12 @@
-__pycache__/
-*.pyc
+﻿# Gradle
 .gradle/
+build/
+app/build/
+local.properties
+
+# IDE
 .idea/
 *.iml
-local.properties
-build/
-captures/
-.DS_Store
+
+# Legacy hand-written build (retired in favour of Gradle)
+/tmp/

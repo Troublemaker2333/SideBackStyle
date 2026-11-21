@@ -139,12 +139,15 @@ public final class BackFxRenderer {
         float rot = 0f;
         float sx = 1f;
         float sy = 1f;
-        if (cfg.elastic || BackFxConfig.EFFECT_STRETCH.equals(cfg.iconEffect)) {
-            float strength = BackFxConfig.EFFECT_STRETCH.equals(cfg.iconEffect) ? 1.7f : 1f;
-            float v = Math.max(-1f, Math.min(1f, velocityX / 2200f));
-            sx *= 1f + 0.10f * strength * v;
-            sy *= 1f - 0.07f * strength * v;
-            rot += -6f * strength * v;
+        // Only 拉伸 deforms the icon. `cfg.elastic` used to be part of this condition; its switch is gone, but the
+        // field stayed true in every saved config, so leaving the check in place made 拉伸 permanent.
+        if (BackFxConfig.EFFECT_STRETCH.equals(cfg.iconEffect)) {
+            // 1200 rather than 2200: a normal swipe reaches around 1500-2000px/s, so the old divisor left the
+            // deformation at a quarter of its ceiling.
+            float v = Math.max(-1f, Math.min(1f, velocityX / 1200f));
+            sx *= 1f + 0.20f * v;
+            sy *= 1f - 0.14f * v;
+            rot += -12f * v;
         }
         return new float[]{rot, sx, sy};
     }
@@ -167,8 +170,12 @@ public final class BackFxRenderer {
             return;
         }
         float r = Math.max(40, Math.min(130, cfg.bgRadius)) * density;
-        float c1 = CTRL1_DP * density;
-        float c2 = CTRL2_DP * density;
+        // 0..100 maps to 0.20x..2.00x of the original control points. The previous 0.55x..1.45x was too narrow to
+        // read: on a drop only ~56dp wide at the tip, both settings looked like a straight flank. 50 still lands on
+        // 1.0x, so the default shape is untouched.
+        float curve = 0.20f + 0.018f * Math.max(0, Math.min(100, cfg.bgCurve));
+        float c1 = CTRL1_DP * density * curve;
+        float c2 = CTRL2_DP * density * curve;
         float tip = Math.max(travel, 1f);
 
         Path path = new Path();

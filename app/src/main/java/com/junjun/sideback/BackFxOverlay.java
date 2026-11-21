@@ -23,7 +23,7 @@ import android.view.animation.DecelerateInterpolator;
  * 图标由设置页决定，位置跟随手指、松手淡出。</p>
  */
 public final class BackFxOverlay {
-    private static final String TAG = "SideBackFx";
+    private static final String TAG = "JunjunBackFx";
 
     private static volatile BackFxOverlay instance;
 
@@ -142,7 +142,8 @@ public final class BackFxOverlay {
                     tracking = false;
                     return;
                 }
-                float max = 56f * density;
+                // The cap only decides how far the drop may reach; `dx` still drives it up to that point.
+                float max = Math.max(10, Math.min(100, cfg.edgeTravelDp)) * density;
                 travel = Math.min(dx, max);
                 long eventTime = event.getEventTime();
                 if (lastMoveTime > 0L) {
@@ -192,7 +193,34 @@ public final class BackFxOverlay {
 
     // ------------------------------------------------------------ window
 
+    /**
+     * True when the chosen style would draw nothing at all.
+     *
+     * <p>The settings page lets every visual part be turned off — no icon, no background, no border,
+     * no glow, no effect — which users read as "透明 / 不显示任何东西". The overlay used to show its
+     * window regardless, so the gesture still produced a window and an animation loop over a canvas
+     * with nothing on it. That looked like the effect failing to turn off. Nothing is built in that
+     * case now, and the frames stop.
+     */
+    static boolean drawsNothing(BackFxConfig cfg) {
+        if (cfg == null) {
+            return true;
+        }
+        boolean noIcon = BackFxConfig.ICON_NONE.equals(cfg.icon);
+        boolean noBackground = BackFxConfig.BG_NONE.equals(cfg.bgStyle);
+        boolean noExtras = !cfg.border && !cfg.glow
+                && (cfg.iconEffect == null || BackFxConfig.EFFECT_NONE.equals(cfg.iconEffect));
+        return noIcon && noBackground && noExtras;
+    }
+
     private void show(final BackFxConfig cfg) {
+        if (drawsNothing(cfg)) {
+            // Drop anything already on screen so turning everything off takes effect mid-session.
+            if (showing || view != null) {
+                main.post(this::stop);
+            }
+            return;
+        }
         main.post(() -> {
             try {
                 ensureView();
@@ -324,9 +352,25 @@ public final class BackFxOverlay {
         }
     }
 
+    /**
+     * Type for the effect window.
+     *
+     * <p>2024 is ColorOS's own value for the side-back layer, one step above the framework's public
+     * TYPE_SYSTEM_OVERLAY (2006) range. The overlay is created from inside SystemUI by the hook, so the
+     * usual reach-through gets it above the app windows it has to draw over while staying below the
+     * status bar — TYPE_APPLICATION_OVERLAY would sit in a different layer entirely and the trail would
+     * be hidden behind the app it belongs to.
+     *
+     * <p>Lint cannot see that this is a deliberate system window type and reports it under
+     * WrongConstant; the suppression documents the decision rather than hiding a bug.
+     */
+    @SuppressWarnings("WrongConstant")
+    private static final int TYPE_ALIVE_SIDE_BACK = 2024;
+
+    @SuppressWarnings("WrongConstant")
     private WindowManager.LayoutParams buildParams() {
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-        lp.type = 2024;
+        lp.type = TYPE_ALIVE_SIDE_BACK;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             try {
                 WindowManager.LayoutParams.class.getMethod("setTrustedOverlay").invoke(lp);
@@ -346,7 +390,7 @@ public final class BackFxOverlay {
         lp.y = 0;
         lp.windowAnimations = 0;
         try {
-            WindowManager.LayoutParams.class.getField("title").set(lp, "SideBackFx");
+            WindowManager.LayoutParams.class.getField("title").set(lp, "JunjunBackFx");
         } catch (Throwable ignored) {
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -415,11 +459,9 @@ public final class BackFxOverlay {
                 float dt = lastDrawTime == 0L ? 0.016f
                         : Math.min(0.05f, (now - lastDrawTime) / 1000f);
                 lastDrawTime = now;
-                if (cfg.elastic || BackFxConfig.EFFECT_STRETCH.equals(cfg.iconEffect)) {
-                    displayY += (targetY - displayY) * Math.min(1f, dt * 16f);
-                } else {
-                    displayY = targetY;
-                }
+                // Always eased: this is what makes the icon follow the finger rather than snap to each motion
+                // event. It used to be gated on `elastic`, which is gone — the spring is not a choice.
+                displayY += (targetY - displayY) * Math.min(1f, dt * 16f);
                 float timeSec = (now - showStart) / 1000f;
                 float scale = 0.86f + 0.14f * enter;
                 float size = BackFxRenderer.iconSize(cfg, density);

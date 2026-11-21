@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 侧滑返回 (backfx). -->
+<resources>
+    <string name="bf_title">侧滑返回</string>
+    <string name="bf_loading">正在读取设置…</string>
+
+    <!-- Preview -->
+    <string name="bf_preview">预览</string>
+    <string name="bf_preview_fixed">固定</string>
+
+    <string name="bf_enable_title">启用自定义样式</string>
+    <string name="bf_enable_summary">贴边滑动时显示；关闭后恢复系统原样</string>
+
+    <!-- Icon group -->
+    <string name="bf_icon_section">图标</string>
+    <string name="bf_icon_color">图标颜色</string>
+    <string name="bf_icon_size">图标大小</string>
+    <string name="bf_icon_size_value">%1$d%% · %2$.1fdp</string>
+    <string name="bf_icon_offset">图标偏移</string>
+    <string name="bf_icon_offset_value">%1$ddp</string>
+    <string name="bf_effect">图标动效</string>
+    <string name="bf_glow_title">光晕</string>
+    <string name="bf_glow_summary">图标外圈一层呼吸光晕</string>
+    <string name="bf_mirror_title">右侧镜像翻转</string>
+    <string name="bf_mirror_summary">让右侧图标与左侧图标互为镜像</string>
+    <string name="bf_image_title">自定义图片</string>
+    <string name="bf_image_empty">未选择；选中「图片」图标后生效</string>
+    <string name="bf_image_set">已选择，点按更换</string>
+    <string name="bf_image_clear">清除</string>
+    <string name="bf_image_failed">这张图片无法使用</string>
+
+    <!-- Background group -->
+    <string name="bf_bg_section">背景</string>
+    <string name="bf_bg_color">背景颜色</string>
+    <string name="bf_indicator_size">指示器大小</string>
+    <string name="bf_alpha">不透明度</string>
+    <string name="bf_transparency">透明度</string>
+    <string name="bf_alpha_value">%1$d%%</string>
+    <string name="bf_frost">磨砂强度</string>
+    <string name="bf_grad_type">渐变类型</string>
+    <string name="bf_grad_angle">渐变方向</string>
+    <string name="bf_angle_value">%1$d°</string>
+    <string name="bf_grad_mid">中间色位置</string>
+    <string name="bf_border_title">高光描边</string>
+    <string name="bf_border_summary">贴边处一层浅白描边，更像系统原生</string>
+
+    <string name="bf_reset">恢复默认样式</string>
+    <string name="bf_footer">需要在 LSPosed 中勾选「系统界面」，改动即时生效，无需重启。</string>
+    <string name="bf_save_failed">保存失败：缺少 WRITE_SECURE_SETTINGS，样式无法下发到系统界面。</string>
+    <string name="bf_section_switch">开关和恢复</string>
+    <string name="bf_group_icon_shape">图标形状</string>
+    <string name="bf_group_icon_size">图标尺寸</string>
+    <string name="bf_group_icon_effect">图标特效</string>
+    <string name="bf_group_bg_shape">背景形状</string>
+    <string name="bf_group_bg_size">背景大小</string>
+    <string name="bf_group_bg_effect">背景特效</string>
+    <string name="bf_pick_colour">选取</string>
+    <string name="bf_bg_color2">渐变终点色</string>
+    <string name="bf_grad_third">三色渐变</string>
+    <string name="bf_grad_third_summary">在两端之间再加一个颜色</string>
+    <string name="bf_grad_mid_color">中间色</string>
+    <string name="bf_elastic_title">跟手弹性</string>
+    <string name="bf_elastic_summary">图标跟随手指时带弹簧，横向快速滑动会拉伸</string>
+    <string name="bf_drop_size">水滴大小</string>
+    <string name="bf_drop_size_value">%1$ddp</string>
+    <string name="bf_drop_curve">水滴圆润度</string>
+    <string name="bf_edge_travel">呼出距离</string>
+    <string name="bf_effect_icon">图标动效</string>
+    <string name="bf_effect_track">跟手动效</string>
+    <!-- iconColor paints the glyph, the glow, and the trails/particles/rings of 跟手动效. -->
+    <string name="bf_icon_or_track_color">图标/跟手动效颜色</string>
+    <string name="bf_back">返回</string>
+</resources>

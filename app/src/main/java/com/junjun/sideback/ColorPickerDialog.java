@@ -122,6 +122,9 @@ public final class ColorPickerDialog {
         final boolean[] selfUpdate = {false};
 
         final Runnable refresh = () -> {
+            // The square is painted from the hue, so it has to be told when the hue moves. Without this the preview
+            // dot and the hex field updated while the square stayed the colour from before the drag.
+            square.setHue(hsv[0]);
             int c = Color.HSVToColor(new float[]{hsv[0], hsv[1], hsv[2]});
             color[0] = c;
             GradientDrawable circle = new GradientDrawable();
@@ -241,7 +244,10 @@ public final class ColorPickerDialog {
         ok.setTextColor(0xFF1E7BFF);
         ok.setPadding((int) (16 * density + 0.5f), (int) (8 * density + 0.5f), (int) (8 * density + 0.5f), (int) (8 * density + 0.5f));
         ok.setOnClickListener(v -> {
-            refreshFromHex.run();
+            // Do not re-read the hex field here. `refreshFromHex` assigns to color[0], and the field can still
+            // hold a value from before the last drag — confirming then replaced the picked colour with that older
+            // one, which looked exactly like the choice being discarded. color[0] is kept current by refresh on
+            // every interaction, so it is already what the user sees.
             callback.onPicked(color[0]);
             dialog.dismiss();
         });

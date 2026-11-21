@@ -18,13 +18,16 @@ import org.json.JSONObject;
  * SystemUI 内的 hook 直接读同一个 key，全程无 IPC、不唤醒模块进程。</p>
  */
 public final class BackFxConfig {
-    private static final String TAG = "SideBackFx";
+    private static final String TAG = "JunjunBackFx";
 
-    public static final String PACKAGE = "com.junjun.sideback";
     public static final String PREFS = "backfx";
-    public static final String PREF_KEY = "config";
-    /** 仅用于从旧版本迁移，新版本不再写入。 */
-    public static final String SETTINGS_KEY = "junjun_sideback";
+    public static final String SETTINGS_KEY = "junjun_backfx";
+
+    /**
+     * This app's package. The config lives in its private preferences, so that file is only readable from inside
+     * its own process — anywhere else it has to be reached through the provider.
+     */
+    private static final String MODULE_PKG = "com.junjun.sideback";
 
     public static final String ICON_ARROW = "arrow";
     public static final String ICON_DOT = "dot";
@@ -103,6 +106,15 @@ public final class BackFxConfig {
     /** 液态玻璃磨砂强度 0-100。 */
     public int glassFrost = 55;
     public int bgRadius = 82;
+    /**
+     * How pointed the drop is: 0 is the roundest outline, 100 the sharpest. Scales the two cubic control points
+     * together, so the shape keeps its proportions however far it is pushed.
+     */
+    public int bgCurve = 50;
+    /**
+     * How far the drop may reach from the edge, in dp. The gesture still tracks the finger; this is only the cap.
+     */
+    public int edgeTravelDp = 56;
     public String gradientType = GRAD_LINEAR;
     /** 线性渐变方向：0° 从左到右，90° 从上到下（屏幕坐标，顺时针）。 */
     public int gradientAngle = 90;
@@ -130,6 +142,8 @@ public final class BackFxConfig {
         c.border = border;
         c.glassFrost = glassFrost;
         c.bgRadius = bgRadius;
+        c.bgCurve = bgCurve;
+        c.edgeTravelDp = edgeTravelDp;
         c.gradientType = gradientType;
         c.gradientAngle = gradientAngle;
         c.gradientMidColor = gradientMidColor;
@@ -154,6 +168,8 @@ public final class BackFxConfig {
             o.put("border", border);
             o.put("glass_frost", glassFrost);
             o.put("bg_radius", bgRadius);
+        o.put("bg_curve", bgCurve);
+        o.put("edge_travel", edgeTravelDp);
             o.put("grad_type", gradientType);
             o.put("grad_angle", gradientAngle);
             o.put("grad_mid_color", gradientMidColor);
@@ -189,6 +205,8 @@ public final class BackFxConfig {
             c.border = o.optBoolean("border", true);
             c.glassFrost = o.optInt("glass_frost", 55);
             c.bgRadius = o.optInt("bg_radius", 82);
+        c.bgCurve = o.optInt("bg_curve", 50);
+        c.edgeTravelDp = o.optInt("edge_travel", 56);
             c.gradientType = o.optString("grad_type", GRAD_LINEAR);
             c.gradientAngle = o.optInt("grad_angle", 90);
             c.gradientMidColor = o.optInt("grad_mid_color", 0);
@@ -226,6 +244,118 @@ public final class BackFxConfig {
         return c;
     }
 
+    // ------------------------------------------------------------ option lists
+
+    /** Icon ids, in the order the settings screen shows them. */
+    public static final String[] ICON_VALUES = {
+            ICON_ARROW, ICON_DOT, ICON_HEART, ICON_STAR,
+            ICON_BOLT, ICON_PAW, ICON_IMAGE, ICON_NONE,
+    };
+
+    public static final String[] ICON_LABELS = {
+            // 无, not 透明: ICON_NONE draws no icon at all, and "透明" read as a transparency setting next to 图标颜色.
+            "箭头", "圆点", "爱心", "星星", "闪电", "猫爪", "图片", "无",
+    };
+
+    /** Background style ids, in the order the settings screen shows them. */
+    /**
+     * The background styles the screen offers.
+     *
+     * 系统 is not among them: `drawBackground` renders every style that is not NONE, GLASS or GRADIENT from
+     * `bgColor` alone, so 系统 and 纯色 were the same picture, the first only differing by also writing
+     * `SYSTEM_BG_COLOR` into the config. The constant stays defined — existing configs use it.
+     */
+    public static final String[] BG_VALUES = {
+            BG_SOLID, BG_GRADIENT, BG_GLASS, BG_NONE,
+    };
+
+    public static final String[] BG_LABELS = {
+            "纯色", "渐变", "玻璃", "无",
+    };
+
+    /**
+     * The palette the colour row offers before the custom picker.
+     *
+     * <p>Declared here rather than in the screen because the first entry is the phone's own backdrop colour,
+     * which is a config constant — a copy in the UI would go stale the moment that constant changed.
+     */
+    public static final int[] BG_PALETTE = {
+            SYSTEM_BG_COLOR, 0xFF000000, 0xFFFFFFFF, 0xFFFFD7E6,
+            0xFFFF7EB6, 0xFF1E7BFF, 0xFF7C4DFF, 0xFF22C55E,
+    };
+
+    /** Indicator-size ids, in the order the settings screen shows them. */
+    /** Indicator sizes. 系统 was the largest of the three under another name, so it is gone. */
+    public static final String[] SIZE_VALUES = {"small", "standard"};
+
+    public static final String[] SIZE_LABELS = {"小", "标准"};
+
+    /** The capsule radius each 指示器大小 step maps to. */
+    public static final int[] BG_RADII = {64, 82};
+
+    /** The opacity steps the slider moves through, as percentages. */
+    public static final int[] ALPHA_STEPS = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
+
+    /** The icon colours, matching the palette the Java screen offered. */
+    public static final int[] ICON_PALETTE = {
+            0xFFFFFFFF, 0xFF1B1B1F, 0xFF1E7BFF, 0xFFFF4D6D,
+            0xFFFFB300, 0xFFA855F7, 0xFF22C55E, 0xFFFF7EB6,
+    };
+
+    /** Every effect id, for parsing and validation. The two rows below are subsets of this. */
+    public static final String[] EFFECT_VALUES = {
+            EFFECT_NONE, EFFECT_GHOST, EFFECT_STRETCH,
+            EFFECT_TRAIL, EFFECT_PARTICLES, EFFECT_RIPPLE,
+    };
+
+    public static final String[] EFFECT_LABELS = {
+            "无", "残影", "拉伸", "拖尾", "粒子", "涟漪",
+    };
+
+    /**
+     * 图标动效 — what the icon itself does while the indicator is out.
+     */
+    public static final String[] ICON_EFFECT_VALUES = {
+            EFFECT_NONE, EFFECT_GHOST, EFFECT_STRETCH,
+    };
+
+    public static final String[] ICON_EFFECT_LABELS = {
+            "无", "残影", "拉伸",
+    };
+
+    /**
+     * 跟手动效 — what is left along the finger's path. These draw trails, particles and rings, so they only mean
+     * something while the finger is moving.
+     */
+    public static final String[] TRACK_EFFECT_VALUES = {
+            EFFECT_NONE, EFFECT_TRAIL, EFFECT_PARTICLES, EFFECT_RIPPLE,
+    };
+
+    public static final String[] TRACK_EFFECT_LABELS = {
+            // 涟漪 draws everything 拖尾 and 粒子 draw, plus rings and a slower exit; the label says so rather than
+            // presenting it as a third independent choice.
+            "无", "拖尾", "粒子", "涟漪（拖尾+粒子）",
+    };
+
+    /**
+     * Gradient shapes, as `BackFxRenderer.buildGradient` implements them.
+     *
+     * The row used to offer only 线性, which made the type look unimplemented — the renderer has handled all three
+     * since the code was carried over, and a third colour whenever {@code gradientMidColor} is not transparent.
+     */
+    public static final String[] GRAD_VALUES = {GRAD_LINEAR, GRAD_RADIAL, GRAD_SWEEP};
+
+    public static final String[] GRAD_LABELS = {"线性", "径向", "扫描"};
+
+    public static int indexOf(String[] values, String value) {
+        for (int i = 0; i < values.length; i++) {
+            if (values[i].equals(value)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     // ------------------------------------------------------------ app side
 
     /**
@@ -234,7 +364,16 @@ public final class BackFxConfig {
      */
     public static BackFxConfig load(Context ctx) {
         try {
-            String raw = readStored(ctx);
+            // Same order as fetch(): the local prefs are what publish() keeps in sync with the system
+            // copy, so they are the reliable record. Reading only Settings.Global here was a silent
+            // data-loss bug: onCreate() publishes whatever load() returns straight back, so when the
+            // global was missing (cleared, never written, or unwritable on this install) load()
+            // produced the defaults and publish() wrote them over the user's saved style. Every
+            // switch appeared to reset itself after the app was force stopped.
+            String raw = readLocal(ctx);
+            if (raw == null || raw.isEmpty()) {
+                raw = readGlobal(ctx);
+            }
             if (raw != null && !raw.isEmpty()) {
                 return fromJson(raw);
             }
@@ -244,87 +383,38 @@ public final class BackFxConfig {
         return new BackFxConfig();
     }
 
-    /**
-     * 配置读取：
-     * <ul>
-     *   <li>SystemUI 进程（被注入）：XSharedPreferences 直接读模块的 prefs 文件</li>
-     *   <li>App 进程：自己的 SharedPreferences；旧版本 Settings.Global 自动迁移一次</li>
-     * </ul>
-     * 两条路都不需要 WRITE_SECURE_SETTINGS。
-     */
-    static String readStored(Context ctx) {
-        if (ctx == null) {
-            return null;
-        }
-        if (PACKAGE.equals(ctx.getPackageName())) {
-            try {
-                String raw = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-                        .getString(PREF_KEY, null);
-                if (raw != null && !raw.isEmpty()) {
-                    return raw;
-                }
-            } catch (Throwable t) {
-                Log.e(TAG, "prefs read failed", t);
-            }
-            try {
-                String legacy = Settings.Global.getString(ctx.getContentResolver(), SETTINGS_KEY);
-                if (legacy != null && !legacy.isEmpty()) {
-                    ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-                            .putString(PREF_KEY, legacy).apply();
-                    return legacy;
-                }
-            } catch (Throwable ignored) {
-            }
-            return null;
-        }
-        // SystemUI 进程：通过只读 ContentProvider 拿配置，App 不需要任何权限。
-        try {
-            android.os.Bundle result = ctx.getContentResolver().call(
-                    android.net.Uri.parse("content://" + ConfigProvider.AUTHORITY),
-                    ConfigProvider.METHOD_GET, null, null);
-            if (result != null) {
-                String raw = result.getString(ConfigProvider.KEY_JSON);
-                if (raw != null && !raw.isEmpty()) {
-                    return raw;
-                }
-            }
-        } catch (Throwable t) {
-            Log.w(TAG, "provider read failed", t);
-        }
-        // 旧版本兜底
-        try {
-            String legacy = Settings.Global.getString(ctx.getContentResolver(), SETTINGS_KEY);
-            if (legacy != null && !legacy.isEmpty()) {
-                return legacy;
-            }
-        } catch (Throwable ignored) {
-        }
-        return null;
-    }
-
     public boolean save(Context ctx) {
         return publish(ctx);
     }
 
-    /** 写入模块自己的 SharedPreferences，SystemUI 侧 700ms 内生效；不需要任何权限。 */
+    /**
+     * Writes the config everywhere the injected side can read it from.
+     *
+     * <p>Both copies have to be written, not one-or-the-other. SystemUI reads the provider first,
+     * and the provider serves the {@code backfx_local} preferences; Settings.Global is only its
+     * fallback, because SystemUI is denied WRITE_SECURE_SETTINGS on this ROM and cannot read the
+     * key at all. Writing only Settings.Global (what this did before) left the provider answering
+     * with whatever was last stored in prefs, so every saved change was invisible to the renderer:
+     * the gesture kept drawing the defaults no matter what the settings page showed.
+     */
     public static boolean publish(Context ctx, BackFxConfig c) {
         String json = c.toJson();
-        boolean ok = false;
+        boolean stored = false;
         try {
-            ok = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-                    .putString(PREF_KEY, json).commit();
+            ctx.getSharedPreferences("backfx_local", 0).edit()
+                    .putString(SETTINGS_KEY, json).commit();
+            stored = true;
         } catch (Throwable t) {
-            Log.e(TAG, "publish prefs failed", t);
+            Log.w(TAG, "local publish failed", t);
         }
-        // 已授权 WRITE_SECURE_SETTINGS 的旧安装仍写一份，方便回退；没权限就跳过。
         try {
-            if (ctx.checkSelfPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS)
-                    == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                Settings.Global.putString(ctx.getContentResolver(), SETTINGS_KEY, json);
-            }
-        } catch (Throwable ignored) {
+            Settings.Global.putString(ctx.getContentResolver(), SETTINGS_KEY, json);
+            stored = true;
+        } catch (Throwable t) {
+            // No root / no WRITE_SECURE_SETTINGS: the local copy above is what carries the config.
+            Log.w(TAG, "publish to Settings.Global failed", t);
         }
-        return ok;
+        return stored;
     }
 
     public boolean publish(Context ctx) {
@@ -336,22 +426,117 @@ public final class BackFxConfig {
     private static volatile BackFxConfig cache;
     private static volatile long cacheAt = -10_000L;
 
+    /**
+     * Reads the current settings.
+     *
+     * <p>Order matters here, and it took a while to get right. The settings screen writes to its own
+     * preferences because it cannot hold WRITE_SECURE_SETTINGS, so those preferences are the source of
+     * truth. The global setting is only a legacy copy: it can hold an old value from a build that used
+     * to write there, and reading it first made the screen look saved while SystemUI kept drawing the
+     * previous style. So the app's provider is asked first, then the local preferences (which resolves
+     * inside the app's own process), and the global setting is the last resort.
+     */
     public static BackFxConfig fetch(Context ctx) {
         long now = SystemClock.elapsedRealtime();
-        BackFxConfig c = cache;
-        if (c != null && now - cacheAt < 700L) {
-            return c;
+        BackFxConfig cached = cache;
+        if (cached != null && now - cacheAt < 700L) {
+            return cached;
         }
-        try {
-            String raw = readStored(ctx);
-            if (raw != null && !raw.isEmpty()) {
-                cache = fromJson(raw);
+        String json = queryProvider(ctx);
+        if (json == null || json.isEmpty()) {
+            json = readLocal(ctx);
+        }
+        if (json != null && !json.isEmpty()) {
+            try {
+                cache = fromJson(json);
                 cacheAt = now;
                 return cache;
+            } catch (Throwable ignored) {
             }
-        } catch (Throwable ignored) {
+        }
+        // Nothing in either synced copy. Adopt whatever the platform still holds and store it, so the
+        // global can only ever seed the config once — never override a real saved value.
+        //
+        // This matters because the provider goes briefly unavailable whenever the app's process is
+        // killed. Falling back to Settings.Global in that window is what made the style flip to a
+        // stale one after a force-stop and back again once the app restarted.
+        json = readGlobal(ctx);
+        if (json != null && !json.isEmpty()) {
+            try {
+                cache = fromJson(json);
+                cacheAt = now;
+                writeLocal(ctx, json);
+                return cache;
+            } catch (Throwable ignored) {
+            }
         }
         return cache;
+    }
+
+    /** Store the config where the provider serves it from. */
+    private static void writeLocal(Context ctx, String json) {
+        try {
+            ctx.getSharedPreferences("backfx_local", 0).edit()
+                    .putString(SETTINGS_KEY, json).commit();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** Ask the app for its stored settings; this is the only path that works across processes. */
+    private static String queryProvider(Context ctx) {
+        try {
+            android.database.Cursor cursor = ctx.getContentResolver().query(
+                    android.net.Uri.parse("content://com.junjun.sideback.config/backfx"),
+                    null, null, null, null);
+            if (cursor == null) {
+                return null;
+            }
+            try {
+                if (cursor.moveToFirst() && !cursor.isNull(0)) {
+                    String value = cursor.getString(0);
+                    android.util.Log.i("sideback_fx", "provider returned: " + value);
+                    return value;
+                }
+                android.util.Log.w("sideback_fx", "provider cursor empty");
+            } finally {
+                cursor.close();
+            }
+        } catch (Throwable error) {
+            android.util.Log.w("sideback_fx", "provider query failed", error);
+        }
+        return null;
+    }
+
+    private static String readLocal(Context ctx) {
+        // Only meaningful inside the toolbox's own process. In SystemUI this call reads SystemUI's own
+        // preferences, which nothing ever writes, so it silently reports "nothing saved" while looking like a
+        // real source — and because it sits ahead of the global copy in the fallback order, the reader believed
+        // it had consulted the truth and fell through to whatever the global still held.
+        if (!ownsPreferences(ctx)) {
+            return null;
+        }
+        try {
+            return ctx.getSharedPreferences("backfx_local", 0).getString(SETTINGS_KEY, null);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    /** Whether this process is the toolbox, i.e. the package the {@code backfx_local} file belongs to. */
+    private static boolean ownsPreferences(Context ctx) {
+        try {
+            return MODULE_PKG.equals(ctx.getPackageName());
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    private static String readGlobal(Context ctx) {
+        try {
+            return Settings.Global.getString(ctx.getContentResolver(), SETTINGS_KEY);
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     // ------------------------------------------------------------ bitmap transport
