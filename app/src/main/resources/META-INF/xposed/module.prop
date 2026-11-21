@@ -1,0 +1,8 @@
+minApiVersion=100
+targetApiVersion=102
+staticScope=true
+name=SideBackStyle
+version=2.0
+versionCode=4
+author=Jun
+description=ColorOS 侧滑返回自定义图标与背景

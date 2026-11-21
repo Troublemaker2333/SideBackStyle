@@ -222,6 +222,7 @@ fun BackFxPage() {
                                             cfg.iconOffsetDp = 0f
                                             cfg.image = ""
                                             cfg.iconEffect = defaults.iconEffect
+                                    cfg.trackEffect = defaults.trackEffect
                                             cfg.bgStyle = defaults.bgStyle
                                             cfg.bgColor = defaults.bgColor
                                             cfg.bgAlpha = defaults.bgAlpha
@@ -396,8 +397,8 @@ item {
                                                 // 残影 and 拉伸 both animate the icon itself.
                         if (current.icon != BackFxConfig.ICON_NONE) {
 item {
-                            // Both rows write `iconEffect`, so they behave as one exclusive choice: a value from
-                            // the other row leaves this one showing 无.
+                            // 图标动效 and 跟手动效 are independent: each writes its own field, so 拉伸 and 涟漪 can
+                            // be active together.
                             OverlayDropdownPreference(
                                 items = BackFxConfig.ICON_EFFECT_LABELS.toList(),
                                 selectedIndex = BackFxConfig.ICON_EFFECT_VALUES
@@ -415,11 +416,11 @@ item {
                             OverlayDropdownPreference(
                                 items = BackFxConfig.TRACK_EFFECT_LABELS.toList(),
                                 selectedIndex = BackFxConfig.TRACK_EFFECT_VALUES
-                                    .indexOf(current.iconEffect)
+                                    .indexOf(current.trackEffect)
                                     .coerceAtLeast(0),
                                 title = stringResource(R.string.bf_effect_track),
                                 onSelectedIndexChange = { index: Int ->
-                                    update(current) { it.iconEffect = BackFxConfig.TRACK_EFFECT_VALUES[index] }
+                                    update(current) { it.trackEffect = BackFxConfig.TRACK_EFFECT_VALUES[index] }
                                 },
                                 enabled = on,
                             )

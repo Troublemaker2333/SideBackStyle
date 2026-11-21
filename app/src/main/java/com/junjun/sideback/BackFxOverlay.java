@@ -439,7 +439,7 @@ public final class BackFxOverlay {
             float size = BackFxRenderer.iconSize(cfg, density);
             float cx = BackFxRenderer.iconCenterX(cfg, drawSide, getWidth(), drawTravel,
                     density, size);
-            motion.release(cx, displayY, cfg.iconEffect, now);
+            motion.release(cx, displayY, cfg.iconEffect, cfg.trackEffect, now);
         }
 
         void setGeometry(int side, float y, float travel) {
@@ -467,7 +467,7 @@ public final class BackFxOverlay {
                 float size = BackFxRenderer.iconSize(cfg, density);
                 float cx = BackFxRenderer.iconCenterX(cfg, drawSide, getWidth(), drawTravel,
                         density, size);
-                motion.update(cx, displayY, fingerX, fingerY, dt, now, cfg.iconEffect);
+                motion.update(cx, displayY, fingerX, fingerY, dt, now, cfg.iconEffect, cfg.trackEffect);
                 BackFxRenderer.draw(canvas, cfg, drawSide, getWidth(), displayY, drawTravel,
                         density, enter, scale, timeSec, velocityX, motion, now);
             } catch (Throwable t) {

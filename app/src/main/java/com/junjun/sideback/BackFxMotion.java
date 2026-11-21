@@ -94,7 +94,7 @@ public final class BackFxMotion {
      * @param effect 当前动效
      */
     public void update(float iconX, float iconY, float fingerX, float fingerY,
-                       float dt, long now, String effect) {
+                       float dt, long now, String iconEffect, String trackEffect) {
         if (Float.isNaN(lastX)) {
             lastX = fingerX;
             lastY = fingerY;
@@ -106,8 +106,8 @@ public final class BackFxMotion {
         lastX = fingerX;
         lastY = fingerY;
 
-        boolean wantTrail = BackFxConfig.EFFECT_TRAIL.equals(effect)
-                || BackFxConfig.EFFECT_RIPPLE.equals(effect);
+        boolean wantTrail = BackFxConfig.EFFECT_TRAIL.equals(trackEffect)
+                || BackFxConfig.EFFECT_RIPPLE.equals(trackEffect);
         if (wantTrail) {
             if (now - lastTrailAt >= 14L || dist > 1.2f) {
                 trail.add(0, new Point(fingerX, fingerY, now));
@@ -116,7 +116,7 @@ public final class BackFxMotion {
             pruneTrail(now);
         }
 
-        if (BackFxConfig.EFFECT_GHOST.equals(effect)
+        if (BackFxConfig.EFFECT_GHOST.equals(iconEffect)
                 && now - lastGhostAt >= 42L && dist > 1.2f) {
             ghosts.add(0, new Point(iconX, iconY, now));
             lastGhostAt = now;
@@ -125,8 +125,8 @@ public final class BackFxMotion {
             }
         }
 
-        boolean wantParticles = BackFxConfig.EFFECT_PARTICLES.equals(effect)
-                || BackFxConfig.EFFECT_RIPPLE.equals(effect);
+        boolean wantParticles = BackFxConfig.EFFECT_PARTICLES.equals(trackEffect)
+                || BackFxConfig.EFFECT_RIPPLE.equals(trackEffect);
         if (wantParticles && speed > 40f) {
             long interval = (long) Math.max(6f, 20f - Math.min(14f, speed / 200f));
             if (now - lastSpawnAt >= interval) {
@@ -166,12 +166,12 @@ public final class BackFxMotion {
         }
     }
 
-    public void release(float x, float y, String effect, long now) {
-        if (BackFxConfig.EFFECT_RIPPLE.equals(effect)) {
+    public void release(float x, float y, String iconEffect, String trackEffect, long now) {
+        if (BackFxConfig.EFFECT_RIPPLE.equals(trackEffect)) {
             rings.add(new Ring(x, y, now));
         }
-        if (BackFxConfig.EFFECT_PARTICLES.equals(effect)
-                || BackFxConfig.EFFECT_RIPPLE.equals(effect)) {
+        if (BackFxConfig.EFFECT_PARTICLES.equals(trackEffect)
+                || BackFxConfig.EFFECT_RIPPLE.equals(trackEffect)) {
             for (int i = 0; i < 14; i++) {
                 double angle = random.nextDouble() * Math.PI * 2;
                 float speed = 220f + random.nextFloat() * 380f;

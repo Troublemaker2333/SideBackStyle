@@ -92,7 +92,11 @@ public final class BackFxConfig {
     /** 设置页预览是否固定在顶部（纯 UI 偏好，不下发到 SystemUI 绘制逻辑）。 */
     public boolean previewFixed = false;
     /** 图标动效：none / breath / heartbeat / sway / spin / jelly。 */
+    /** 图标动效：残影 / 拉伸 — transforms on the icon itself. */
     public String iconEffect = EFFECT_NONE;
+
+    /** 跟手动效：拖尾 / 粒子 / 涟漪 — what is drawn along the finger's path. Independent of {@link #iconEffect}. */
+    public String trackEffect = EFFECT_NONE;
     /** 跟手弹性：图标纵向弹簧跟随 + 横向速度形变。 */
     public boolean elastic = true;
     /** 图标外圈呼吸光晕。 */
@@ -132,6 +136,7 @@ public final class BackFxConfig {
         c.iconOffsetDp = iconOffsetDp;
         c.previewFixed = previewFixed;
         c.iconEffect = iconEffect;
+        c.trackEffect = trackEffect;
         c.elastic = elastic;
         c.glow = glow;
         c.image = image;
@@ -178,6 +183,7 @@ public final class BackFxConfig {
             o.put("icon_offset", Math.round(iconOffsetDp * 10f) / 10.0);
             o.put("preview_fixed", previewFixed);
             o.put("icon_effect", iconEffect);
+        o.put("track_effect", trackEffect);
             o.put("elastic", elastic);
             o.put("glow", glow);
             return o.toString();
@@ -215,6 +221,14 @@ public final class BackFxConfig {
             c.iconOffsetDp = (float) o.optDouble("icon_offset", 0.0);
             c.previewFixed = o.optBoolean("preview_fixed", false);
             c.iconEffect = o.optString("icon_effect", EFFECT_NONE);
+        c.trackEffect = o.optString("track_effect", EFFECT_NONE);
+        // Configs written before the split stored 跟手动效 in icon_effect; move it across so an upgrade keeps the
+        // effect the user chose instead of showing 无 in both rows.
+        if (EFFECT_TRAIL.equals(c.iconEffect) || EFFECT_PARTICLES.equals(c.iconEffect)
+                || EFFECT_RIPPLE.equals(c.iconEffect)) {
+            c.trackEffect = c.iconEffect;
+            c.iconEffect = EFFECT_NONE;
+        }
             c.elastic = o.optBoolean("elastic", true);
             c.glow = o.optBoolean("glow", false);
         } catch (Throwable t) {
@@ -236,10 +250,13 @@ public final class BackFxConfig {
         }
         c.iconOffsetDp = Math.max(0f, Math.min(400f, c.iconOffsetDp));
         c.glassFrost = Math.max(0, Math.min(100, c.glassFrost));
-        if (!EFFECT_TRAIL.equals(c.iconEffect) && !EFFECT_PARTICLES.equals(c.iconEffect)
-                && !EFFECT_GHOST.equals(c.iconEffect) && !EFFECT_STRETCH.equals(c.iconEffect)
-                && !EFFECT_RIPPLE.equals(c.iconEffect)) {
+        // 图标动效 only accepts the two that transform the icon.
+        if (!EFFECT_GHOST.equals(c.iconEffect) && !EFFECT_STRETCH.equals(c.iconEffect)) {
             c.iconEffect = EFFECT_NONE;
+        }
+        if (!EFFECT_TRAIL.equals(c.trackEffect) && !EFFECT_PARTICLES.equals(c.trackEffect)
+                && !EFFECT_RIPPLE.equals(c.trackEffect)) {
+            c.trackEffect = EFFECT_NONE;
         }
         return c;
     }

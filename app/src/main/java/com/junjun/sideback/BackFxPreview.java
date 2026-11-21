@@ -165,7 +165,7 @@ public final class BackFxPreview extends View {
                 w - 20f * density,
                 30f * density + travel
                         + (0.5f + 0.5f * (float) Math.sin(timeSec * 1.3f)) * 70f * density);
-        motion.update(iconCx, cy, demoFingerX, cy, dt, now, config.iconEffect);
+        motion.update(iconCx, cy, demoFingerX, cy, dt, now, config.iconEffect, config.trackEffect);
 
         // The demo finger is a sine wave, so its slope is the velocity a real gesture would report. Passing it through
         // is what lets 弹性 bend the icon in the preview as it does under a finger; with 0f the two settings looked
