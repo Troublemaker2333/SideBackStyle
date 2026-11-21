@@ -210,24 +210,38 @@ fun BackFxPage() {
         ArrowPreference(
                                     title = stringResource(R.string.bf_reset),
                                     onClick = {
-                                        // A fresh default object, saved through the same single writer.
+                                        // Every style field comes from a fresh default object, so this cannot drift as fields are
+                                        // added. The hand-written list here had already lost `glow` (a reset left the halo on) and
+                                        // never touched the drop geometry or the gradient stops.
                                         imageThumb = null
                                         update(current) { cfg ->
                                             val defaults = BackFxConfig()
+                                            // A view preference, not part of the style.
+                                            val fixed = cfg.previewFixed
                                             cfg.enabled = true
                                             cfg.icon = defaults.icon
                                             cfg.iconColor = defaults.iconColor
                                             cfg.iconScale = defaults.iconScale
-                                            cfg.iconMirror = false
-                                            cfg.iconOffsetDp = 0f
-                                            cfg.image = ""
+                                            cfg.iconMirror = defaults.iconMirror
+                                            cfg.iconOffsetDp = defaults.iconOffsetDp
+                                            cfg.image = defaults.image
                                             cfg.iconEffect = defaults.iconEffect
-                                    cfg.trackEffect = defaults.trackEffect
+                                            cfg.trackEffect = defaults.trackEffect
+                                            cfg.glow = defaults.glow
                                             cfg.bgStyle = defaults.bgStyle
                                             cfg.bgColor = defaults.bgColor
+                                            cfg.bgColor2 = defaults.bgColor2
                                             cfg.bgAlpha = defaults.bgAlpha
-                                            cfg.border = true
-                                            cfg.glassFrost = defaultFrost
+                                            cfg.border = defaults.border
+                                            cfg.glassFrost = defaults.glassFrost
+                                            cfg.bgRadius = defaults.bgRadius
+                                            cfg.bgCurve = defaults.bgCurve
+                                            cfg.edgeTravelDp = defaults.edgeTravelDp
+                                            cfg.gradientType = defaults.gradientType
+                                            cfg.gradientAngle = defaults.gradientAngle
+                                            cfg.gradientMidColor = defaults.gradientMidColor
+                                            cfg.gradientMidPos = defaults.gradientMidPos
+                                            cfg.previewFixed = fixed
                                         }
                                     },
                                 )

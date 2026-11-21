@@ -106,7 +106,8 @@ public final class BackFxConfig {
     public int bgColor = SYSTEM_BG_COLOR;
     public int bgColor2 = 0xFFFF7EB6;
     public int bgAlpha = SYSTEM_BG_ALPHA;
-    public boolean border = true;
+    /** 高光描边：贴边处一层浅白边。默认关闭 —— 它是额外效果，不是基础外观。 */
+    public boolean border = false;
     /** 液态玻璃磨砂强度 0-100。 */
     public int glassFrost = 55;
     public int bgRadius = 82;
@@ -208,7 +209,7 @@ public final class BackFxConfig {
             c.bgColor = o.optInt("bg_color", SYSTEM_BG_COLOR);
             c.bgColor2 = o.optInt("bg_color2", 0xFFFF7EB6);
             c.bgAlpha = o.optInt("bg_alpha", SYSTEM_BG_ALPHA);
-            c.border = o.optBoolean("border", true);
+            c.border = o.optBoolean("border", false);
             c.glassFrost = o.optInt("glass_frost", 55);
             c.bgRadius = o.optInt("bg_radius", 82);
         c.bgCurve = o.optInt("bg_curve", 50);
