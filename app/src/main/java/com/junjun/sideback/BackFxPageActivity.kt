@@ -24,7 +24,7 @@ class BackFxPageActivity : ComponentActivity() {
             val dispatcherOwner = rememberNavigationEventDispatcherOwner(parent = null)
             CompositionLocalProvider(LocalNavigationEventDispatcherOwner provides dispatcherOwner) {
                 COUITheme(controller = controller) {
-                    BackFxPage(onBack = { finish() })
+                    BackFxPage()
                 }
             }
         }

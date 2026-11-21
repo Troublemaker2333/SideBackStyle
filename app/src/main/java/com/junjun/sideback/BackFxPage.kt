@@ -28,7 +28,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -73,7 +72,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun BackFxPage(onBack: () -> Unit) {
+fun BackFxPage() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val scrollBehavior = COUIScrollBehavior()
@@ -136,15 +135,10 @@ fun BackFxPage(onBack: () -> Unit) {
         topBar = {
             TopAppBar(
                 title = stringResource(R.string.bf_title),
+                // Nothing sits behind this Activity — it is the module's launcher — so the arrow only repeated
+                // the system back gesture.
+                subtitle = stringResource(R.string.bf_subtitle),
                 scrollBehavior = scrollBehavior,
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.bf_back),
-                        )
-                    }
-                },
             )
         },
     ) { outerPadding ->

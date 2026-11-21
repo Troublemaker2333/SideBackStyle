@@ -70,4 +70,5 @@
     <!-- iconColor paints the glyph, the glow, and the trails/particles/rings of 跟手动效. -->
     <string name="bf_icon_or_track_color">图标/跟手动效颜色</string>
     <string name="bf_back">返回</string>
+    <string name="bf_subtitle">LSPosed 勾选「系统界面」生效 · 改动免重启</string>
 </resources>
