@@ -13,3 +13,8 @@ local.properties
 
 # Legacy 1.x APKs, retired in 2.0; releases go to GitHub Releases
 /dist/
+
+# Release signing key — never commit. CI injects the same passwords via Secrets.
+/keystore/
+# Locally assembled release artefacts.
+/release/
